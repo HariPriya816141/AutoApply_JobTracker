@@ -111,6 +111,40 @@ const Applications = () => {
     return "";
   };
 
+  function handleDeleteAll() {
+    toast.info(
+      ({ closeToast }) => (
+        <div className="flex flex-col gap-2">
+          <span>Are you sure you want to delete all applications?</span>
+          <div className="flex justify-end gap-2 mt-1">
+            <button
+              onClick={() => {
+                setApps([]);
+                localStorage.setItem("applications", JSON.stringify([]));
+                toast.success("All applications deleted successfully!");
+                closeToast();
+              }}
+              className="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition"
+            >
+              Yes
+            </button>
+            <button
+              onClick={closeToast}
+              className="px-3 py-1 text-sm bg-gray-300 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded hover:bg-gray-400 transition"
+            >
+              No
+            </button>
+          </div>
+        </div>
+      ),
+      {
+        autoClose: false,
+        closeOnClick: false,
+        draggable: false,
+      }
+    );
+  }
+
   return (
     <div className="w-full">
       {/* Header */}
@@ -130,6 +164,12 @@ const Applications = () => {
             className="px-4 py-2 !rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition"
           >
             + Add
+          </button>
+          <button
+            onClick={handleDeleteAll}
+            className="px-4 py-2 !rounded-lg bg-red-500 text-white hover:bg-red-600 transition"
+          >
+            Delete All
           </button>
         </div>
       </div>
@@ -327,5 +367,3 @@ const Applications = () => {
 };
 
 export default Applications;
-
-
