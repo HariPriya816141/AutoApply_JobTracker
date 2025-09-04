@@ -1,0 +1,48 @@
+/* Base button styling */
+.manual-toggle-btn {
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  border: 2px solid #888;
+  background-color: #f0f0f0;
+  color: #222;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.manual-toggle-btn:hover {
+  background-color: #e0e0e0;
+}
+
+/* Dark mode styling applied via JS */
+.dark-mode .manual-toggle-btn {
+  background-color: #222;
+  color: #f0f0f0;
+  border-color: #555;
+}
+
+.light-mode .manual-toggle-btn {
+  background-color: #f0f0f0;
+  color: #222;
+  border-color: #888;
+}
+
+
+/* Base body styling */
+body {
+  background-color: #f0f0f0;
+  color: #222;
+  transition: all 0.3s ease;
+}
+
+/* Dark mode body */
+.dark-mode body {
+  background-color: #222;
+  color: #f0f0f0;
+}
+
+/* Light mode body */
+.light-mode body {
+  background-color: #f0f0f0;
+  color: #222;
+}
