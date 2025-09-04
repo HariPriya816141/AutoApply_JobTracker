@@ -5,6 +5,8 @@ import { toast } from "react-toastify";
 const Applications = () => {
   const [apps, setApps] = useState([]);
   const [query, setQuery] = useState("");
+  const [sortKey, setSortKey] = useState(""); // column to sort
+  const [sortOrder, setSortOrder] = useState("asc"); // 'asc' or 'desc'
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -12,7 +14,7 @@ const Applications = () => {
     setApps(data);
   }, []);
 
-  function updateStatus(id, status) {
+  const updateStatus = (id, status) => {
     try {
       const updated = apps.map((a) => (a.id === id ? { ...a, status } : a));
       setApps(updated);
@@ -22,9 +24,9 @@ const Applications = () => {
       console.error(error);
       toast.error("Failed to update status. Please try again.");
     }
-  }
+  };
 
-  function handleDelete(id) {
+  const handleDelete = (id) => {
     const confirmDelete = () => {
       try {
         const updated = apps.filter((a) => a.id !== id);
@@ -45,14 +47,14 @@ const Applications = () => {
             <button
               onClick={() => {
                 confirmDelete();
-                closeToast(); // close toast after confirming
+                closeToast();
               }}
               className="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition"
             >
               Yes
             </button>
             <button
-              onClick={closeToast} // just close toast on cancel
+              onClick={closeToast}
               className="px-3 py-1 text-sm bg-gray-300 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded hover:bg-gray-400 transition"
             >
               No
@@ -61,18 +63,53 @@ const Applications = () => {
         </div>
       ),
       {
-        autoClose: false, // keep open until user clicks
+        autoClose: false,
         closeOnClick: false,
         draggable: false,
       }
     );
-  }
+  };
 
+  // Filter
   const filtered = apps.filter(
     (a) =>
       a.company.toLowerCase().includes(query.toLowerCase()) ||
       a.role.toLowerCase().includes(query.toLowerCase())
   );
+
+  // Sort
+  const sortedApps = [...filtered].sort((a, b) => {
+    if (!sortKey) return 0;
+    const valA = a[sortKey]?.toString().toLowerCase() || "";
+    const valB = b[sortKey]?.toString().toLowerCase() || "";
+    if (valA < valB) return sortOrder === "asc" ? -1 : 1;
+    if (valA > valB) return sortOrder === "asc" ? 1 : -1;
+    return 0;
+  });
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const appsPerPage = 5;
+  const indexOfLastApp = currentPage * appsPerPage;
+  const indexOfFirstApp = indexOfLastApp - appsPerPage;
+  const currentApps = sortedApps.slice(indexOfFirstApp, indexOfLastApp);
+  const totalPages = Math.ceil(filtered.length / appsPerPage);
+  const pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1);
+
+  // Handle sorting click
+  const handleSort = (key) => {
+    if (sortKey === key) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortKey(key);
+      setSortOrder("asc");
+    }
+  };
+
+  const renderSortArrow = (key) => {
+    if (sortKey === key) return sortOrder === "asc" ? " ▲" : " ▼";
+    return "";
+  };
 
   return (
     <div className="w-full">
@@ -103,18 +140,48 @@ const Applications = () => {
           <table className="min-w-full table-auto whitespace-nowrap text-sm">
             <thead className="text-left text-gray-600 sticky dark:text-gray-300 bg-gray-50 dark:bg-gray-700/50">
               <tr>
-                <th className="px-4 py-3">Company</th>
-                <th className="px-4 py-3">Role</th>
-                <th className="px-4 py-3">Date</th>
-                <th className="px-4 py-3">Location</th>
-                <th className="px-4 py-3">Source</th>
-                <th className="px-4 py-3">Status</th>
+                <th
+                  className="px-4 py-3 cursor-pointer"
+                  onClick={() => handleSort("company")}
+                >
+                  Company{renderSortArrow("company")}
+                </th>
+                <th
+                  className="px-4 py-3 cursor-pointer"
+                  onClick={() => handleSort("role")}
+                >
+                  Role{renderSortArrow("role")}
+                </th>
+                <th
+                  className="px-4 py-3 cursor-pointer"
+                  onClick={() => handleSort("date")}
+                >
+                  Date{renderSortArrow("date")}
+                </th>
+                <th
+                  className="px-4 py-3 cursor-pointer"
+                  onClick={() => handleSort("location")}
+                >
+                  Location{renderSortArrow("location")}
+                </th>
+                <th
+                  className="px-4 py-3 cursor-pointer"
+                  onClick={() => handleSort("source")}
+                >
+                  Source{renderSortArrow("source")}
+                </th>
+                <th
+                  className="px-4 py-3 cursor-pointer"
+                  onClick={() => handleSort("status")}
+                >
+                  Status{renderSortArrow("status")}
+                </th>
                 <th className="px-4 py-3">Follow Up</th>
                 <th className="px-4 py-3">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filtered.map((app, i) => (
+              {currentApps.map((app, i) => (
                 <tr
                   key={app.id}
                   className={`border-t border-gray-100 dark:border-gray-700  ${
@@ -138,7 +205,6 @@ const Applications = () => {
                   <td className="px-4 py-3 text-gray-700 dark:text-gray-200">
                     {app.source}
                   </td>
-
                   <td className="px-4 py-3">
                     <select
                       value={app.status}
@@ -185,9 +251,42 @@ const Applications = () => {
         </div>
       </div>
 
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex justify-center gap-2 mt-4">
+          <button
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            className="px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300 dark:hover:bg-gray-600"
+          >
+            Prev
+          </button>
+          {pageNumbers.map((num) => (
+            <button
+              key={num}
+              onClick={() => setCurrentPage(num)}
+              className={`px-3 py-1 rounded ${
+                num === currentPage
+                  ? "bg-indigo-600 text-white"
+                  : "bg-gray-200 dark:bg-gray-700"
+              }`}
+            >
+              {num}
+            </button>
+          ))}
+          <button
+            onClick={() =>
+              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+            }
+            className="px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300 dark:hover:bg-gray-600"
+          >
+            Next
+          </button>
+        </div>
+      )}
+
       {/* Mobile cards */}
       <div className="md:hidden space-y-3 mt-4">
-        {filtered.map((app) => (
+        {currentApps.map((app) => (
           <div
             key={app.id}
             className="p-4 rounded-xl bg-white dark:bg-gray-800 shadow"
@@ -228,3 +327,5 @@ const Applications = () => {
 };
 
 export default Applications;
+
+
